@@ -113,3 +113,82 @@ bBtn.onclick = () => {
 };
 
 document.getElementById("yr").textContent = new Date().getFullYear();
+
+/* Seigaiha (青海波) wave pattern, generated so colours stay in one place */
+function seigaiha(bg, line){
+  const R = 40, rows = [[-20,[0,80]],[0,[40]],[20,[0,80]],[40,[40]],[60,[0,80]]];
+  const scale = (cx, cy) => [R, 32, 24, 16, 8].map((r, i) =>
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${i ? "none" : bg}" stroke="${line}" stroke-width="1.4"/>`).join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40">${rows.map(([y, xs]) => xs.map(x => scale(x, y)).join("")).join("")}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+document.documentElement.style.setProperty("--seigaiha", seigaiha("#f1e8dc", "rgba(63,95,76,.075)"));
+document.documentElement.style.setProperty("--seigaiha-dark", seigaiha("#3f5f4c", "rgba(255,255,255,.07)"));
+
+/* Sakura petals drifting across the page */
+(function sakura(){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv = document.createElement("canvas"), ctx = cv.getContext("2d");
+  cv.id = "sakura"; cv.setAttribute("aria-hidden", "true");
+  document.body.appendChild(cv);
+  let W, H, dpr, petals = [], wind = 0, lastY = scrollY, running = true;
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const spawn = top => ({
+    x: rand(0, W), y: top ? rand(-H, 0) : rand(0, H),
+    s: rand(6, 12), vy: rand(.35, .9), vx: rand(.1, .45),
+    sway: rand(.6, 1.6), swayF: rand(.006, .014), t: rand(0, 1000),
+    rot: rand(0, Math.PI * 2), vr: rand(-.02, .02), flip: rand(.02, .05),
+    hue: rand(340, 355), light: rand(84, 92)
+  });
+  function resize(){
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.max(8, Math.min(22, Math.round(W / 75)));
+    while (petals.length < n) petals.push(spawn(false));
+    petals.length = n;
+  }
+  function petal(p){
+    const s = p.s;
+    ctx.save();
+    ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+    ctx.scale(1, Math.cos(p.t * p.flip));             // flutter: petal turning in the air
+    ctx.beginPath();                                    // sakura petal with the notch at its tip
+    ctx.moveTo(0, s);
+    ctx.bezierCurveTo(-s * .9, s * .35, -s * .75, -s * .75, -s * .28, -s);
+    ctx.lineTo(0, -s * .72);
+    ctx.lineTo(s * .28, -s);
+    ctx.bezierCurveTo(s * .75, -s * .75, s * .9, s * .35, 0, s);
+    const g = ctx.createLinearGradient(0, s, 0, -s);
+    g.addColorStop(0, `hsla(${p.hue},70%,${p.light - 6}%,.85)`);
+    g.addColorStop(1, `hsla(${p.hue},80%,${p.light + 4}%,.75)`);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.restore();
+  }
+  function frame(){
+    if (!running) return;
+    ctx.clearRect(0, 0, W, H);
+    wind *= .96;
+    for (const p of petals) {
+      p.t++;
+      p.x += p.vx + Math.sin(p.t * p.swayF) * p.sway * .5 + wind;
+      p.y += p.vy + Math.abs(wind) * .3;
+      p.rot += p.vr;
+      if (p.y > H + 20 || p.x > W + 20 || p.x < -20) Object.assign(p, spawn(true), {y: -20});
+      petal(p);
+    }
+    requestAnimationFrame(frame);
+  }
+  addEventListener("resize", resize);
+  addEventListener("scroll", () => {                    // scrolling stirs a light breeze
+    wind = Math.max(-2.5, Math.min(2.5, wind + (scrollY - lastY) * .02));
+    lastY = scrollY;
+  }, {passive:true});
+  document.addEventListener("visibilitychange", () => {
+    running = !document.hidden;
+    if (running) requestAnimationFrame(frame);
+  });
+  resize(); requestAnimationFrame(frame);
+})();

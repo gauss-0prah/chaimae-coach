@@ -297,6 +297,17 @@ footer a:hover{color:#fff}
 .fab-tip{position:absolute;right:76px;background:#fff;color:var(--ink);padding:10px 14px;border-radius:12px;font-size:14px;white-space:nowrap;box-shadow:var(--shadow);opacity:0;transform:translateX(10px);transition:.3s;pointer-events:none}
 .fab:hover .fab-tip{opacity:1;transform:none}
 
+/* Japanese touches: sakura, ensō, seigaiha */
+#sakura{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:45}
+.enso{position:absolute;inset:-3%;width:106%;height:106%;overflow:visible;animation:spin 90s linear infinite}
+.enso path{fill:none;stroke:var(--sage-deep);stroke-opacity:.42;stroke-width:6;stroke-linecap:round;
+  stroke-dasharray:560;stroke-dashoffset:560;animation:enso-draw 2.8s cubic-bezier(.6,.05,.3,1) .4s forwards}
+.enso path.thin{stroke-width:2.2;stroke-opacity:.25;animation-delay:.7s}
+@keyframes enso-draw{to{stroke-dashoffset:0}}
+.approach{background:var(--seigaiha,none) 0 0/80px 40px,var(--sand);animation:waves 80s linear infinite}
+@keyframes waves{to{background-position:80px 40px,0 0}}
+.final-box{background:radial-gradient(circle at 80% 20%,rgba(243,217,204,.35),transparent 50%),var(--seigaiha-dark,none) 0 0/80px 40px,var(--sage-deep)}
+
 /* Phone numbers always read left-to-right */
 .ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}
 
